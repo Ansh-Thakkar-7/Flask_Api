@@ -5,8 +5,14 @@ import cv2
 
 app = Flask(__name__)
 
-# Load your model
-model = tf.keras.models.load_model('amanking.h5')
+# Initialize the model variable to None
+model = None
+
+def load_model():
+    global model
+    if model is None:
+        model = tf.keras.models.load_model('amanking.h5')
+        print("Model loaded successfully!")
 
 @app.route('/')
 def home():
@@ -15,8 +21,10 @@ def home():
 @app.route('/predict', methods=['POST'])
 
 def predict():
+    load_model()  # Load the model when the prediction endpoint is accessed
     print("hello")
     file = request.files['image']
+    
     # Read the file as an image
     img = cv2.imdecode(np.fromstring(file.read(), np.uint8), cv2.IMREAD_COLOR)
     img = cv2.resize(img, (100, 100))
@@ -27,16 +35,32 @@ def predict():
     prediction = model.predict(img)
     predicted_class_index = np.argmax(prediction[0])
 
-    class_name = ['Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
-                    'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew', 
-                    'Cherry_(including_sour)___healthy', 'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot', 
-                    'Corn_(maize)___Common_rust_', 'Corn_(maize)___Northern_Leaf_Blight', 'Corn_(maize)___healthy', 
-                    'Grape___Black_rot', 'Grape___Esca_(Black_Measles)', 'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)', 
-                    'Grape___healthy', 'Orange___Haunglongbing_(Citrus_greening)', 'Peach___Bacterial_spot',
-                    'Peach___healthy', 'Pepper,_bell___Bacterial_spot', 'Pepper,_bell___healthy', 
-                    'Potato___Early_blight']
+    # Class names
+    class_name = [
+        'Apple Apple scab',
+        'Apple Black rot',
+        'Apple Cedar apple rust',
+        'Apple healthy',
+        'Blueberry healthy',
+        'Cherry (including sour) Powdery mildew',
+        'Cherry (including sour) healthy',
+        'Corn (maize) Cercospora leaf spot Gray leaf spot',
+        'Corn (maize) Common rust',
+        'Corn (maize) Northern Leaf Blight',
+        'Corn (maize) healthy',
+        'Grape Black rot',
+        'Grape Esca (Black Measles)',
+        'Grape Leaf blight (Isariopsis Leaf Spot)',
+        'Grape healthy',
+        'Orange Haunglongbing (Citrus greening)',
+        'Peach Bacterial spot',
+        'Peach healthy',
+        'Pepper, bell Bacterial spot',
+        'Pepper, bell healthy',
+        'Potato Early blight'
+    ]
     
     return jsonify({'predicted_class': class_name[predicted_class_index]})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=8000)
